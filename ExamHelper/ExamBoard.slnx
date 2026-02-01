@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../ExamBoard/ExamBoard.csproj" />
+  <Project Path="ExamHelper.csproj" />
+</Solution>
