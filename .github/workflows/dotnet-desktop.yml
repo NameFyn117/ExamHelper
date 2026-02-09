@@ -92,8 +92,7 @@ jobs:
           $buildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
           $buildId = "${{ github.run_id }}-${{ github.run_attempt }}"
           
-          $buildInfo = @"
-构建信息
+          $buildInfo = @"构建信息
 =========
 项目名称: ExamSettings
 版本号: $version
