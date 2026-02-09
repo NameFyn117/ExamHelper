@@ -14,7 +14,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      Solution_Name: ExamHelper.sln
+      Solution_Name: ExamHelper.slnx
       Test_Project_Path: ExamSettings\ExamSettings.csproj
       Wap_Project_Directory: ExamHelper.Package
       Wap_Project_Path: ExamHelper.Package\ExamHelper.Package.wapproj
