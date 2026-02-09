@@ -1,4 +1,4 @@
-name: Build
+name: .NET Core Desktop
 on:
   push:
     branches: ["master"]
@@ -26,17 +26,10 @@ jobs:
 
       - name: Verify files
         run: |
-          # 验证关键文件是否存在
           Write-Host "检查解决方案文件..."
           Get-ChildItem *.sln*
           Write-Host "检查项目文件..."
           Get-ChildItem -Recurse *.csproj
-          
-          # 显示解决方案文件内容（前20行）
-          if (Test-Path $env:Solution_Name) {
-            Write-Host "解决方案文件内容:"
-            Get-Content $env:Solution_Name | Select-Object -First 20
-          }
 
       - name: Install .NET Core
         uses: actions/setup-dotnet@v4
@@ -48,7 +41,6 @@ jobs:
 
       - name: Execute unit tests
         run: |
-          # 如果没有专门的测试项目，可以跳过此步骤
           Write-Host "执行测试..."
           dotnet test 2>&1 | Write-Host
 
@@ -70,8 +62,6 @@ jobs:
         run: |
           Write-Host "发布应用程序..."
           Write-Host "项目路径: $env:Main_Project_Path"
-          
-          # 直接发布项目
           dotnet publish $env:Main_Project_Path -c ${{ matrix.configuration }} -o $env:Output_Directory --self-contained false
 
       - name: Create zip package
@@ -92,13 +82,15 @@ jobs:
           $projectName = "ExamSettings"
           $zipName = "$projectName-v$version-${{ matrix.configuration }}.zip"
           
-          # 创建ZIP文件
-          Compress-Archive -Path "$env:Output_Directory\*" -DestinationPath $zipName -Force
+          # 进入publish文件夹，然后压缩其中的内容
+          Push-Location $env:Output_Directory
+          Compress-Archive -Path "*" -DestinationPath "../$zipName" -Force
+          Pop-Location
+          
           Write-Host "已创建ZIP包: $zipName"
           
-          # 显示发布文件夹内容
-          Write-Host "发布文件夹内容:"
-          Get-ChildItem $env:Output_Directory
+          # 显示生成的ZIP文件信息
+          Get-ChildItem *.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -106,4 +98,13 @@ jobs:
           name: ExamSettings-Build
           path: |
             *.zip
-            publish/
+      - name: Clean publish directory
+  run: |
+    # 删除不必要的文件，如调试符号文件等
+    Remove-Item "$env:Output_Directory\*.pdb" -Force -ErrorAction SilentlyContinue
+    Remove-Item "$env:Output_Directory\*.xml" -Force -ErrorAction SilentlyContinue
+      - name: Add build info
+  run: |
+    $buildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $buildInfo = "Build Date: $buildDate`r`nBuild Configuration: ${{ matrix.configuration }}`r`nVersion: $version"
+    $buildInfo | Out-File -FilePath "$env:Output_Directory\BUILD_INFO.txt" -Encoding UTF8
