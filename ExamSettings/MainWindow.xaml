@@ -5,13 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ExamSettings"
         xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
+        ui:WindowHelper.SystemBackdropType="Mica"
+        ui:TitleBar.Height="36"
         mc:Ignorable="d"
         Title="ExamHelper 设置" Height="750" Width="1200"
         Loaded="Window_Loaded">
     <Grid>
-        <ui:NavigationView x:Name="NavigationView_Root" IsPaneOpen="False" SelectionChanged="NavigationView_Root_SelectionChanged">
+		<ui:NavigationView x:Name="NavigationView_Root" IsPaneOpen="False" SelectionChanged="NavigationView_Root_SelectionChanged">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem x:Name="NavigationViewItem_Home" Content="首页">
+                <ui:NavigationViewItem x:Name="NavigationViewItem_Home" Content="开始">
                     <ui:NavigationViewItem.Icon>
                         <ui:FontIcon Icon="{x:Static ui:SegoeFluentIcons.Home}"/>
                     </ui:NavigationViewItem.Icon>
@@ -20,12 +22,6 @@
                 <ui:NavigationViewItem x:Name="NavigationViewItem_ExamEditer" Content="时间表编辑器">
                     <ui:NavigationViewItem.Icon>
                         <ui:FontIcon Icon="{x:Static ui:SegoeFluentIcons.DateTime}"/>
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
-
-                <ui:NavigationViewItem x:Name="NavigationViewItem_Games" Content="Games">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:FontIcon Icon="{x:Static ui:SegoeFluentIcons.Game}"/>
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
 

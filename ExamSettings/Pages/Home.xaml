@@ -11,8 +11,6 @@
          Title="Home">
 
     <Grid>
-        <Rectangle Margin="10" Stroke="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ui:Page}, Path=Foreground}" StrokeThickness="2"
-                RadiusX="8" RadiusY="8" StrokeDashArray="4 2"/>
-        <TextBlock Text="Home" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+        <TextBlock Text="I am a TextBlock." />
     </Grid>
 </ui:Page>

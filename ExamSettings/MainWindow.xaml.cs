@@ -7,7 +7,6 @@ namespace ExamSettings
     public partial class MainWindow : Window
     {
         private readonly Pages.Home _pageHome;
-        private readonly Pages.GamesPage _pageGames;
         private readonly Pages.ExamEditer _pageApps;
         private readonly Pages.Settings _pageSettings;
         private readonly Pages.About _pageAbout;
@@ -18,7 +17,6 @@ namespace ExamSettings
 
             // Pre-create page instances to improve navigation performance
             _pageHome = new Pages.Home();
-            _pageGames = new Pages.GamesPage();
             _pageApps = new Pages.ExamEditer();
             _pageSettings = new Pages.Settings();
             _pageAbout = new Pages.About();
@@ -32,10 +30,6 @@ namespace ExamSettings
             if (item == NavigationViewItem_Home)
             {
                 page = _pageHome;
-            }
-            else if (item == NavigationViewItem_Games)
-            {
-                page = _pageGames;
             }
             else if (item == NavigationViewItem_ExamEditer)
             {
