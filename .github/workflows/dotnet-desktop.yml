@@ -16,7 +16,6 @@ jobs:
     env:
       Solution_Name: ExamHelper.slnx
       Test_Project_Path: ExamSettings\ExamSettings.csproj
-      Main_Project_Name: ExamHelper
       Output_Directory: publish
 
     steps:
@@ -33,6 +32,26 @@ jobs:
       - name: Setup MSBuild.exe
         uses: microsoft/setup-msbuild@v2
 
+      - name: List directory structure
+        run: |
+          Get-ChildItem -Recurse -Depth 3 | Format-Table Name, FullName
+
+      - name: Find main project
+        id: find-project
+        shell: pwsh
+        run: |
+          # 尝试查找主项目文件
+          $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Where-Object { $_.Name -notlike "*Test*" -and $_.Name -notlike "*Settings*" } | Select-Object -First 1
+          if ($projectFile) {
+            Write-Host "Found main project: $($projectFile.FullName)"
+            echo "MAIN_PROJECT_PATH=$($projectFile.FullName)" >> $env:GITHUB_OUTPUT
+            echo "PROJECT_NAME=$($projectFile.BaseName)" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "No main project found, defaulting to ExamHelper.csproj"
+            echo "MAIN_PROJECT_PATH=ExamHelper.csproj" >> $env:GITHUB_OUTPUT
+            echo "PROJECT_NAME=ExamHelper" >> $env:GITHUB_OUTPUT
+          }
+
       - name: Execute unit tests
         run: dotnet test
 
@@ -46,19 +65,25 @@ jobs:
         env:
           Configuration: ${{ matrix.configuration }}
         run: |
-          msbuild $env:Solution_Name /t:Build /p:Configuration=$env:Configuration /p:Platform="Any CPU" /p:OutputPath=bin\$env:Configuration\
+          msbuild $env:Solution_Name /t:Build /p:Configuration=$env:Configuration /p:Platform="Any CPU"
 
       - name: Publish the application
         run: |
           # 发布应用，生成所有运行所需文件
-          dotnet publish $env:Main_Project_Name -c ${{ matrix.configuration }} -o $env:Output_Directory --self-contained false
+          echo "Publishing project: ${{ steps.find-project.outputs.MAIN_PROJECT_PATH }}"
+          dotnet publish "${{ steps.find-project.outputs.MAIN_PROJECT_PATH }}" -c ${{ matrix.configuration }} -o $env:Output_Directory --self-contained false
 
       - name: Create zip package
         run: |
           # 压缩发布文件夹
-          $version = (Get-Content "$env:Main_Project_Name.csproj" | Select-String "<Version>([^<]+)</Version>" | ForEach-Object { $_.Matches.Groups[1].Value })
+          $projectFile = "${{ steps.find-project.outputs.MAIN_PROJECT_PATH }}"
+          if (Test-Path $projectFile) {
+            $version = (Get-Content $projectFile | Select-String "<Version>([^<]+)</Version>" | ForEach-Object { $_.Matches.Groups[1].Value })
+          }
           if ([string]::IsNullOrEmpty($version)) { $version = "1.0.0" }
-          $zipName = "$env:Main_Project_Name-v$version-${{ matrix.configuration }}.zip"
+          
+          $projectName = "${{ steps.find-project.outputs.PROJECT_NAME }}"
+          $zipName = "$projectName-v$version-${{ matrix.configuration }}.zip"
           
           Compress-Archive -Path "$env:Output_Directory\*" -DestinationPath $zipName -Force
           Write-Host "Created zip package: $zipName"
