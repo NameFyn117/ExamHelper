@@ -11,13 +11,13 @@
     <Grid>
         <ui:NavigationView x:Name="NavigationView_Root" IsPaneOpen="False" SelectionChanged="NavigationView_Root_SelectionChanged">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem x:Name="NavigationViewItem_Home" Content="Home">
+                <ui:NavigationViewItem x:Name="NavigationViewItem_Home" Content="首页">
                     <ui:NavigationViewItem.Icon>
                         <ui:FontIcon Icon="{x:Static ui:SegoeFluentIcons.Home}"/>
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
 
-                <ui:NavigationViewItem x:Name="NavigationViewItem_Apps" Content="Apps">
+                <ui:NavigationViewItem x:Name="NavigationViewItem_ExamEditer" Content="时间表编辑器">
                     <ui:NavigationViewItem.Icon>
                         <ui:FontIcon Icon="{x:Static ui:SegoeFluentIcons.DateTime}"/>
                     </ui:NavigationViewItem.Icon>
@@ -33,12 +33,12 @@
 
             <ui:NavigationView.FooterMenuItems>
 
-                <ui:NavigationViewItem x:Name="NavigationViewItem_Settings" Content="Settings">
+                <ui:NavigationViewItem x:Name="NavigationViewItem_Settings" Content="设置">
                     <ui:NavigationViewItem.Icon>
                         <ui:FontIcon Icon="{x:Static ui:SegoeFluentIcons.Settings}"/>
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem x:Name="NavigationViewItem_About" Content="About">
+                <ui:NavigationViewItem x:Name="NavigationViewItem_About" Content="关于">
                     <ui:NavigationViewItem.Icon>
                         <ui:FontIcon Icon="{x:Static ui:SegoeFluentIcons.Info}"/>
                     </ui:NavigationViewItem.Icon>

@@ -37,7 +37,7 @@ namespace ExamSettings
             {
                 page = _pageGames;
             }
-            else if (item == NavigationViewItem_Apps)
+            else if (item == NavigationViewItem_ExamEditer)
             {
                 page = _pageApps;
             }
