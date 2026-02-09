@@ -1,4 +1,5 @@
 name: Build
+
 on:
   push:
     branches: ["master"]
@@ -67,16 +68,9 @@ jobs:
       - name: Clean publish directory
         run: |
           Write-Host "清理发布目录..."
-          
-          # 删除不必要的调试符号文件
           Remove-Item "$env:Output_Directory\*.pdb" -Force -ErrorAction SilentlyContinue
-          
-          # 删除XML文档文件（可选）
           Remove-Item "$env:Output_Directory\*.xml" -Force -ErrorAction SilentlyContinue
-          
-          # 删除编译时的中间文件
           Remove-Item "$env:Output_Directory\*.cs" -Force -ErrorAction SilentlyContinue
-          
           Write-Host "清理完成。剩余文件:"
           Get-ChildItem $env:Output_Directory | Measure-Object | Select-Object -ExpandProperty Count
           Get-ChildItem $env:Output_Directory
@@ -85,7 +79,6 @@ jobs:
         run: |
           Write-Host "添加构建信息..."
           
-          # 从项目文件读取版本号
           $projectFile = $env:Main_Project_Path
           $version = "1.0.0"
           if (Test-Path $projectFile) {
@@ -96,11 +89,9 @@ jobs:
             }
           }
           
-          # 获取构建日期和时间
           $buildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
           $buildId = "${{ github.run_id }}-${{ github.run_attempt }}"
           
-          # 创建构建信息文件
           $buildInfo = @"
 构建信息
 =========
@@ -141,7 +132,6 @@ GitHub Actions 运行信息
         run: |
           Write-Host "创建ZIP包..."
           
-          # 从项目文件读取版本号
           $projectFile = $env:Main_Project_Path
           $version = "1.0.0"
           if (Test-Path $projectFile) {
@@ -155,14 +145,12 @@ GitHub Actions 运行信息
           $projectName = "ExamSettings"
           $zipName = "$projectName-v$version-${{ matrix.configuration }}.zip"
           
-          # 进入publish文件夹，然后压缩其中的内容
           Push-Location $env:Output_Directory
           Compress-Archive -Path "*" -DestinationPath "../$zipName" -Force
           Pop-Location
           
           Write-Host "已创建ZIP包: $zipName"
           
-          # 显示生成的ZIP文件信息
           Write-Host "ZIP文件详情:"
           $zipFile = Get-Item $zipName
           Write-Host "文件名: $($zipFile.Name)"
