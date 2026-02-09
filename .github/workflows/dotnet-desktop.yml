@@ -16,8 +16,8 @@ jobs:
     env:
       Solution_Name: ExamHelper.slnx
       Test_Project_Path: ExamSettings\ExamSettings.csproj
-      Wap_Project_Directory: ExamHelper.Package
-      Wap_Project_Path: ExamHelper.Package\ExamHelper.Package.wapproj
+      Main_Project_Name: ExamHelper
+      Output_Directory: publish
 
     steps:
       - name: Checkout
@@ -36,26 +36,37 @@ jobs:
       - name: Execute unit tests
         run: dotnet test
 
-      - name: List directory structure
-        run: Get-ChildItem
-
       - name: Restore the application
         env:
           Configuration: ${{ matrix.configuration }}
         run: |
           msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
 
-      - name: Decode the pfx
+      - name: Build the application
+        env:
+          Configuration: ${{ matrix.configuration }}
         run: |
-          # 确保目标目录存在
-          $targetDir = $env:Wap_Project_Directory
-          if (-not (Test-Path -Path $targetDir)) {
-            New-Item -ItemType Directory -Path $targetDir -Force
-          }
-          $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
-          $certificatePath = Join-Path -Path $targetDir -ChildPath GitHubActionsWorkflow.pfx
-          [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+          msbuild $env:Solution_Name /t:Build /p:Configuration=$env:Configuration /p:Platform="Any CPU" /p:OutputPath=bin\$env:Configuration\
 
-      - name: Create the app package
+      - name: Publish the application
         run: |
-          msbuild $env:Wap_Project_Path /p:Configuration=${{ matrix.configuration }} /p:UapAppPackagePackageBuildMode=no /n:AppPackages
+          # 发布应用，生成所有运行所需文件
+          dotnet publish $env:Main_Project_Name -c ${{ matrix.configuration }} -o $env:Output_Directory --self-contained false
+
+      - name: Create zip package
+        run: |
+          # 压缩发布文件夹
+          $version = (Get-Content "$env:Main_Project_Name.csproj" | Select-String "<Version>([^<]+)</Version>" | ForEach-Object { $_.Matches.Groups[1].Value })
+          if ([string]::IsNullOrEmpty($version)) { $version = "1.0.0" }
+          $zipName = "$env:Main_Project_Name-v$version-${{ matrix.configuration }}.zip"
+          
+          Compress-Archive -Path "$env:Output_Directory\*" -DestinationPath $zipName -Force
+          Write-Host "Created zip package: $zipName"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExamHelper-Build
+          path: |
+            *.zip
+            publish/
