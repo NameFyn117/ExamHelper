@@ -1,4 +1,4 @@
-name: Build
+name: .NET Core Desktop
 
 on:
   push:
@@ -91,32 +91,30 @@ jobs:
           
           $buildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
           
-          # 创建构建信息 - 使用简单的字符串拼接
-          $buildInfo = @'
-构建信息
-=========
-项目名称: ExamSettings
-版本号: $version
-构建配置: ${{ matrix.configuration }}
-构建日期: $buildDate
-工作流运行ID: ${{ github.run_id }}
-运行尝试: ${{ github.run_attempt }}
-提交SHA: ${{ github.sha }}
-触发分支: ${{ github.ref_name }}
-触发事件: ${{ github.event_name }}
-
-.NET 版本信息
-=============
-.NET SDK: 10.0.102
-构建平台: windows-latest
-
-使用方法
-========
-1. 解压此ZIP文件到任意目录
-2. 运行 ExamSettings.exe
-
-注意：此应用程序需要 .NET 10.0 运行时环境
-'@
+          # 使用方法C：字符串拼接创建构建信息
+          $buildInfo = "构建信息" + [Environment]::NewLine
+          $buildInfo += "=========" + [Environment]::NewLine
+          $buildInfo += "项目名称: ExamSettings" + [Environment]::NewLine
+          $buildInfo += "版本号: $version" + [Environment]::NewLine
+          $buildInfo += "构建配置: ${{ matrix.configuration }}" + [Environment]::NewLine
+          $buildInfo += "构建日期: $buildDate" + [Environment]::NewLine
+          $buildInfo += "工作流运行ID: ${{ github.run_id }}" + [Environment]::NewLine
+          $buildInfo += "运行尝试: ${{ github.run_attempt }}" + [Environment]::NewLine
+          $buildInfo += "提交SHA: ${{ github.sha }}" + [Environment]::NewLine
+          $buildInfo += "触发分支: ${{ github.ref_name }}" + [Environment]::NewLine
+          $buildInfo += "触发事件: ${{ github.event_name }}" + [Environment]::NewLine + [Environment]::NewLine
+          
+          $buildInfo += "GitHub Actions 运行信息" + [Environment]::NewLine
+          $buildInfo += "======================" + [Environment]::NewLine
+          $buildInfo += "运行编号: ${{ github.run_number }}" + [Environment]::NewLine
+          $buildInfo += "运行仓库: ${{ github.repository }}" + [Environment]::NewLine
+          $buildInfo += "运行工作流: ${{ github.workflow }}" + [Environment]::NewLine
+          $buildInfo += "运行执行者: ${{ github.actor }}" + [Environment]::NewLine + [Environment]::NewLine
+          
+          $buildInfo += ".NET 版本信息" + [Environment]::NewLine
+          $buildInfo += "=============" + [Environment]::NewLine
+          $buildInfo += ".NET SDK: 10.0.102" + [Environment]::NewLine
+          $buildInfo += "构建平台: windows-latest" + [Environment]::NewLine + [Environment]::NewLine
           
           $buildInfo | Out-File -FilePath "$env:Output_Directory\BUILD_INFO.txt" -Encoding UTF8
           Write-Host "构建信息文件已创建"
