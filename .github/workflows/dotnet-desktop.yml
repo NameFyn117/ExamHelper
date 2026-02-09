@@ -1,0 +1,157 @@
+name: .NET Core Desktop
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Release]
+
+    runs-on: windows-latest
+
+    env:
+      Solution_Name: ExamHelper.slnx
+      Main_Project_Path: ExamSettings/ExamSettings.csproj
+      Output_Directory: publish
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify files
+        run: |
+          Write-Host "检查解决方案文件..."
+          Get-ChildItem *.sln*
+          Write-Host "检查项目文件..."
+          Get-ChildItem -Recurse *.csproj
+
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.102
+
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Execute unit tests
+        run: |
+          Write-Host "执行测试..."
+          dotnet test 2>&1 | Write-Host
+
+      - name: Restore the application
+        env:
+          Configuration: ${{ matrix.configuration }}
+        run: |
+          Write-Host "恢复解决方案..."
+          msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+
+      - name: Build the application
+        env:
+          Configuration: ${{ matrix.configuration }}
+        run: |
+          Write-Host "构建解决方案..."
+          msbuild $env:Solution_Name /t:Build /p:Configuration=$env:Configuration /p:Platform="Any CPU"
+
+      - name: Publish the application
+        run: |
+          Write-Host "发布应用程序..."
+          Write-Host "项目路径: $env:Main_Project_Path"
+          dotnet publish $env:Main_Project_Path -c ${{ matrix.configuration }} -o $env:Output_Directory --self-contained false
+
+      - name: Clean publish directory
+        run: |
+          Write-Host "清理发布目录..."
+          Remove-Item "$env:Output_Directory\*.pdb" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$env:Output_Directory\*.xml" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$env:Output_Directory\*.cs" -Force -ErrorAction SilentlyContinue
+          Write-Host "清理完成。剩余文件:"
+          Get-ChildItem $env:Output_Directory | Measure-Object | Select-Object -ExpandProperty Count
+          Get-ChildItem $env:Output_Directory
+
+      - name: Add build info
+        run: |
+          Write-Host "添加构建信息..."
+          
+          $projectFile = $env:Main_Project_Path
+          $version = "1.0.0"
+          if (Test-Path $projectFile) {
+            $content = Get-Content $projectFile
+            $versionMatch = $content | Select-String "<Version>([^<]+)</Version>"
+            if ($versionMatch) {
+              $version = $versionMatch.Matches.Groups[1].Value
+            }
+          }
+          
+          $buildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+          
+          # 使用方法C：字符串拼接创建构建信息
+          $buildInfo = "构建信息" + [Environment]::NewLine
+          $buildInfo += "=========" + [Environment]::NewLine
+          $buildInfo += "项目名称: ExamSettings" + [Environment]::NewLine
+          $buildInfo += "版本号: $version" + [Environment]::NewLine
+          $buildInfo += "构建配置: ${{ matrix.configuration }}" + [Environment]::NewLine
+          $buildInfo += "构建日期: $buildDate" + [Environment]::NewLine
+          $buildInfo += "工作流运行ID: ${{ github.run_id }}" + [Environment]::NewLine
+          $buildInfo += "运行尝试: ${{ github.run_attempt }}" + [Environment]::NewLine
+          $buildInfo += "提交SHA: ${{ github.sha }}" + [Environment]::NewLine
+          $buildInfo += "触发分支: ${{ github.ref_name }}" + [Environment]::NewLine
+          $buildInfo += "触发事件: ${{ github.event_name }}" + [Environment]::NewLine + [Environment]::NewLine
+          
+          $buildInfo += "GitHub Actions 运行信息" + [Environment]::NewLine
+          $buildInfo += "======================" + [Environment]::NewLine
+          $buildInfo += "运行编号: ${{ github.run_number }}" + [Environment]::NewLine
+          $buildInfo += "运行仓库: ${{ github.repository }}" + [Environment]::NewLine
+          $buildInfo += "运行工作流: ${{ github.workflow }}" + [Environment]::NewLine
+          $buildInfo += "运行执行者: ${{ github.actor }}" + [Environment]::NewLine + [Environment]::NewLine
+          
+          $buildInfo += ".NET 版本信息" + [Environment]::NewLine
+          $buildInfo += "=============" + [Environment]::NewLine
+          $buildInfo += ".NET SDK: 10.0.102" + [Environment]::NewLine
+          $buildInfo += "构建平台: windows-latest" + [Environment]::NewLine + [Environment]::NewLine
+          
+          $buildInfo | Out-File -FilePath "$env:Output_Directory\BUILD_INFO.txt" -Encoding UTF8
+          Write-Host "构建信息文件已创建"
+
+      - name: Create zip package
+        run: |
+          Write-Host "创建ZIP包..."
+          
+          $projectFile = $env:Main_Project_Path
+          $version = "1.0.0"
+          if (Test-Path $projectFile) {
+            $content = Get-Content $projectFile
+            $versionMatch = $content | Select-String "<Version>([^<]+)</Version>"
+            if ($versionMatch) {
+              $version = $versionMatch.Matches.Groups[1].Value
+            }
+          }
+          
+          $projectName = "ExamSettings"
+          $zipName = "$projectName-v$version-${{ matrix.configuration }}.zip"
+          
+          Push-Location $env:Output_Directory
+          Compress-Archive -Path "*" -DestinationPath "../$zipName" -Force
+          Pop-Location
+          
+          Write-Host "已创建ZIP包: $zipName"
+          
+          Write-Host "ZIP文件详情:"
+          $zipFile = Get-Item $zipName
+          Write-Host "文件名: $($zipFile.Name)"
+          Write-Host "文件大小: $([math]::Round($zipFile.Length / 1MB, 2)) MB"
+          Write-Host "最后修改时间: $($zipFile.LastWriteTime)"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExamSettings-Build
+          path: |
+            *.zip
+          retention-days: 7
