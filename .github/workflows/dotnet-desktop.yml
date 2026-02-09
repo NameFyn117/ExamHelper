@@ -1,4 +1,4 @@
-name: Build App
+name: Build
 
 on:
   push:
@@ -46,10 +46,14 @@ jobs:
         Configuration: ${{ matrix.configuration }}
 
     - name: Decode the pfx
-      run: |
-        $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
-        $certificatePath = Join-Path -Path $env:Wap_Project_Directory -ChildPath GitHubActionsWorkflow.pfx
-        [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+  run: |
+    $targetDir = $env:Wap_Project_Directory
+    if (-not (Test-Path -Path $targetDir)) {
+      New-Item -ItemType Directory -Path $targetDir -Force
+    }
+    $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
+    $certificatePath = Join-Path -Path $targetDir -ChildPath GitHubActionsWorkflow.pfx
+    [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
 
     - name: Create the app package
       run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
