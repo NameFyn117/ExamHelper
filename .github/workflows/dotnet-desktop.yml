@@ -1,4 +1,4 @@
-name: .NET Core Desktop
+name: Build
 on:
   push:
     branches: ["master"]
@@ -64,6 +64,79 @@ jobs:
           Write-Host "项目路径: $env:Main_Project_Path"
           dotnet publish $env:Main_Project_Path -c ${{ matrix.configuration }} -o $env:Output_Directory --self-contained false
 
+      - name: Clean publish directory
+        run: |
+          Write-Host "清理发布目录..."
+          
+          # 删除不必要的调试符号文件
+          Remove-Item "$env:Output_Directory\*.pdb" -Force -ErrorAction SilentlyContinue
+          
+          # 删除XML文档文件（可选）
+          Remove-Item "$env:Output_Directory\*.xml" -Force -ErrorAction SilentlyContinue
+          
+          # 删除编译时的中间文件
+          Remove-Item "$env:Output_Directory\*.cs" -Force -ErrorAction SilentlyContinue
+          
+          Write-Host "清理完成。剩余文件:"
+          Get-ChildItem $env:Output_Directory | Measure-Object | Select-Object -ExpandProperty Count
+          Get-ChildItem $env:Output_Directory
+
+      - name: Add build info
+        run: |
+          Write-Host "添加构建信息..."
+          
+          # 从项目文件读取版本号
+          $projectFile = $env:Main_Project_Path
+          $version = "1.0.0"
+          if (Test-Path $projectFile) {
+            $content = Get-Content $projectFile
+            $versionMatch = $content | Select-String "<Version>([^<]+)</Version>"
+            if ($versionMatch) {
+              $version = $versionMatch.Matches.Groups[1].Value
+            }
+          }
+          
+          # 获取构建日期和时间
+          $buildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+          $buildId = "${{ github.run_id }}-${{ github.run_attempt }}"
+          
+          # 创建构建信息文件
+          $buildInfo = @"
+构建信息
+=========
+项目名称: ExamSettings
+版本号: $version
+构建配置: ${{ matrix.configuration }}
+构建日期: $buildDate
+工作流运行ID: ${{ github.run_id }}
+运行尝试: ${{ github.run_attempt }}
+提交SHA: ${{ github.sha }}
+触发分支: ${{ github.ref_name }}
+触发事件: ${{ github.event_name }}
+
+GitHub Actions 运行信息
+======================
+运行编号: ${{ github.run_number }}
+运行仓库: ${{ github.repository }}
+运行工作流: ${{ github.workflow }}
+运行执行者: ${{ github.actor }}
+
+.NET 版本信息
+=============
+.NET SDK: 10.0.102
+构建平台: windows-latest
+
+使用方法
+========
+1. 解压此ZIP文件到任意目录
+2. 运行 ExamSettings.exe
+
+注意：此应用程序需要 .NET 10.0 运行时环境
+"@
+          
+          $buildInfo | Out-File -FilePath "$env:Output_Directory\BUILD_INFO.txt" -Encoding UTF8
+          Write-Host "构建信息文件已创建"
+
       - name: Create zip package
         run: |
           Write-Host "创建ZIP包..."
@@ -90,7 +163,11 @@ jobs:
           Write-Host "已创建ZIP包: $zipName"
           
           # 显示生成的ZIP文件信息
-          Get-ChildItem *.zip
+          Write-Host "ZIP文件详情:"
+          $zipFile = Get-Item $zipName
+          Write-Host "文件名: $($zipFile.Name)"
+          Write-Host "文件大小: $([math]::Round($zipFile.Length / 1MB, 2)) MB"
+          Write-Host "最后修改时间: $($zipFile.LastWriteTime)"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -98,13 +175,4 @@ jobs:
           name: ExamSettings-Build
           path: |
             *.zip
-      - name: Clean publish directory
-  run: |
-    # 删除不必要的文件，如调试符号文件等
-    Remove-Item "$env:Output_Directory\*.pdb" -Force -ErrorAction SilentlyContinue
-    Remove-Item "$env:Output_Directory\*.xml" -Force -ErrorAction SilentlyContinue
-      - name: Add build info
-  run: |
-    $buildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $buildInfo = "Build Date: $buildDate`r`nBuild Configuration: ${{ matrix.configuration }}`r`nVersion: $version"
-    $buildInfo | Out-File -FilePath "$env:Output_Directory\BUILD_INFO.txt" -Encoding UTF8
+          retention-days: 7
