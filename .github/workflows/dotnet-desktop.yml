@@ -90,9 +90,10 @@ jobs:
           }
           
           $buildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-          $buildId = "${{ github.run_id }}-${{ github.run_attempt }}"
           
-          $buildInfo = @"构建信息
+          # 创建构建信息 - 使用简单的字符串拼接
+          $buildInfo = @"
+构建信息
 =========
 项目名称: ExamSettings
 版本号: $version
@@ -103,13 +104,6 @@ jobs:
 提交SHA: ${{ github.sha }}
 触发分支: ${{ github.ref_name }}
 触发事件: ${{ github.event_name }}
-
-GitHub Actions 运行信息
-======================
-运行编号: ${{ github.run_number }}
-运行仓库: ${{ github.repository }}
-运行工作流: ${{ github.workflow }}
-运行执行者: ${{ github.actor }}
 
 .NET 版本信息
 =============
