@@ -92,7 +92,7 @@ jobs:
           $buildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
           
           # 创建构建信息 - 使用简单的字符串拼接
-          $buildInfo = @"
+          $buildInfo = @'
 构建信息
 =========
 项目名称: ExamSettings
@@ -116,7 +116,7 @@ jobs:
 2. 运行 ExamSettings.exe
 
 注意：此应用程序需要 .NET 10.0 运行时环境
-"@
+'@
           
           $buildInfo | Out-File -FilePath "$env:Output_Directory\BUILD_INFO.txt" -Encoding UTF8
           Write-Host "构建信息文件已创建"
