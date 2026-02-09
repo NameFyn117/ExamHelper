@@ -19,7 +19,7 @@
 
                 <ui:NavigationViewItem x:Name="NavigationViewItem_Apps" Content="Apps">
                     <ui:NavigationViewItem.Icon>
-                        <ui:FontIcon Icon="{x:Static ui:SegoeFluentIcons.OEM}"/>
+                        <ui:FontIcon Icon="{x:Static ui:SegoeFluentIcons.DateTime}"/>
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
 
