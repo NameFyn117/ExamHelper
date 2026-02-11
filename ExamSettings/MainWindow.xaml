@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:ExamSettings"
         xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
         ui:WindowHelper.SystemBackdropType="Mica"
+        ui:WindowHelper.UseModernWindowStyle="True"
         ui:TitleBar.Height="36"
         mc:Ignorable="d"
         Title="ExamHelper 设置" Height="750" Width="1200"
