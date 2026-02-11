@@ -10,7 +10,8 @@
          Foreground="SeaGreen"
          Title="Home">
 
-    <Grid>
-        <TextBlock Text="I am a TextBlock." />
+    <Grid Margin="50" VerticalAlignment="Top">
+          <Border>
+          </Border>
     </Grid>
 </ui:Page>

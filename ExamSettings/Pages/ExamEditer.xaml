@@ -9,9 +9,8 @@
          Foreground="CornflowerBlue"
          Title="Exam Editor">
 
-    <Grid>
-        <Rectangle Margin="10" Stroke="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ui:Page}, Path=Foreground}" StrokeThickness="2"
-                RadiusX="8" RadiusY="8" StrokeDashArray="4 2"/>
-        <TextBlock Text="Exam Editor" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+    <Grid Margin="50" VerticalAlignment="Top">
+        <Border>
+        </Border>
     </Grid>
 </ui:Page>

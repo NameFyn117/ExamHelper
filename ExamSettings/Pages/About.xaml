@@ -10,7 +10,8 @@
          Title="About"
          Foreground="Black">
 
-    <Grid>
-        <TextBlock Text="About" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+    <Grid Margin="50" VerticalAlignment="Top">
+        <Border>
+        </Border>
     </Grid>
 </ui:Page>

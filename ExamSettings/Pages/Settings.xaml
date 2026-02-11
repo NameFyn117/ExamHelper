@@ -4,13 +4,29 @@
          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
          xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
          xmlns:local="clr-namespace:ExamSettings.Pages"
+         xmlns:ikw="http://schemas.inkore.net/lib/ui/wpf"
          xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
          mc:Ignorable="d" 
          d:DesignHeight="450" d:DesignWidth="800"
          Title="Settings"
          Foreground="Black">
 
-    <Grid>
-        <TextBlock Text="Settings" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+    <Grid Margin="50" VerticalAlignment="Top">
+        <Border>
+            <ikw:SimpleStackPanel Spacing="4">
+                <ui:SettingsCard x:Name="AppTheme"
+        Description="控制应用的明暗主题。此设置同样适用于 时芒环 。"
+        Header="应用主题" IsEnabled="True">
+                    <ui:SettingsCard.HeaderIcon>
+                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.DarkTheme_24_Regular}" />
+                    </ui:SettingsCard.HeaderIcon>
+                    <ComboBox SelectedIndex="0">
+                        <ComboBoxItem>跟随系统</ComboBoxItem>
+                        <ComboBoxItem>明亮</ComboBoxItem>
+                        <ComboBoxItem>黑暗</ComboBoxItem>
+                    </ComboBox>
+                </ui:SettingsCard>
+            </ikw:SimpleStackPanel>
+        </Border>
     </Grid>
 </ui:Page>
