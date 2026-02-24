@@ -27,10 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ExamHelperServices\ExamHelperServices.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <SplashScreen Include="SplashScreen.png" />
   </ItemGroup>
 
