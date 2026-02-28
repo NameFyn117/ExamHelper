@@ -22,7 +22,9 @@ class Program
         var consoleWindow = GetConsoleWindow();
         if (consoleWindow != IntPtr.Zero)
         {
+#if !DEBUG
             ShowWindow(consoleWindow, SW_HIDE);
+#endif
         }
 
         string appPath = AppDomain.CurrentDomain.BaseDirectory;
@@ -78,6 +80,7 @@ class TrayApplicationContext : ApplicationContext
     {
         try
         {
+            Console.WriteLine($"[ExamHelper.Services] 打开数据文件夹: {_dataFolderPath}");
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = _dataFolderPath,
@@ -85,9 +88,9 @@ class TrayApplicationContext : ApplicationContext
                 Verb = "open"
             });
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            Console.WriteLine($"[ExamHelper.Services] 打开数据文件夹失败: {ex.Message}");
         }
     }
 
@@ -103,12 +106,15 @@ class TrayApplicationContext : ApplicationContext
         {
             try
             {
+                Console.WriteLine($"[ExamHelper.Services] 尝试打开设置文件: {c}");
                 var full = Path.GetFullPath(c);
                 if (File.Exists(full))
                 {
+                    Console.WriteLine($"[ExamHelper.Services] 找到设置文件: {full}");
                     StartExe(full);
                     return;
                 }
+                Console.WriteLine($"[ExamHelper.Services] 设置文件不存在: {full}");
             }
             catch { }
         }
@@ -166,14 +172,16 @@ class TrayApplicationContext : ApplicationContext
     {
         try
         {
+            Console.WriteLine($"[ExamHelper.Services] 启动设置程序: {fullPath}");
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = fullPath,
                 UseShellExecute = true
             });
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[ExamHelper.Services] 启动设置程序失败: {ex.Message}");
             try
             {
                 _trayIcon.ShowBalloonTip(5000, "启动失败", "无法启动 ExamSettings。", ToolTipIcon.Error);
