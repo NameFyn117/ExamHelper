@@ -5,25 +5,73 @@ using System.Windows;
 using iNKORE.UI.WPF.Modern.Controls;
 using Newtonsoft.Json;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Media;
 
 namespace ExamSettings.Pages
 {
-    public class TimeSlot
+    public class TimeSlot : INotifyPropertyChanged
     {
-        public string Name { get; set; } = string.Empty;
-        public string StartDate { get; set; } = string.Empty;
-        public string StartTime { get; set; } = string.Empty;
-        public string EndDate { get; set; } = string.Empty;
-        public string EndTime { get; set; } = string.Empty;
+        private string name = string.Empty;
+        private string startDate = string.Empty;
+        private string startTime = string.Empty;
+        private string endDate = string.Empty;
+        private string endTime = string.Empty;
+
+        public string Name
+        {
+            get => name;
+            set => SetField(ref name, value);
+        }
+        public string StartDate
+        {
+            get => startDate;
+            set => SetField(ref startDate, value);
+        }
+        public string StartTime
+        {
+            get => startTime;
+            set => SetField(ref startTime, value);
+        }
+        public string EndDate
+        {
+            get => endDate;
+            set => SetField(ref endDate, value);
+        }
+        public string EndTime
+        {
+            get => endTime;
+            set => SetField(ref endTime, value);
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
     }
 
     public partial class ExamEditer : Page
     {
-        private List<TimeSlot>? timeSlots;
+        private ObservableCollection<TimeSlot>? timeSlots;
         private string? dataFilePath;
 
         public ExamEditer()
         {
+            // Ensure XAML controls are created before any code that accesses them
+            InitializeComponent();
+
             InitializeData();
             LoadData();
         }
@@ -37,38 +85,36 @@ namespace ExamSettings.Pages
                 Directory.CreateDirectory(dataDir);
             }
             dataFilePath = Path.Combine(dataDir, "Default.json");
-            timeSlots = new();
+            timeSlots = new ObservableCollection<TimeSlot>();
         }
 
         private void LoadData()
         {
             try
             {
-                if (File.Exists(dataFilePath))
+                if (!string.IsNullOrEmpty(dataFilePath) && File.Exists(dataFilePath))
                 {
                     string json = File.ReadAllText(dataFilePath);
-                    timeSlots = JsonConvert.DeserializeObject<List<TimeSlot>>(json) ?? new();
+                    var list = JsonConvert.DeserializeObject<List<TimeSlot>>(json) ?? new List<TimeSlot>();
+                    timeSlots = new ObservableCollection<TimeSlot>(list);
                 }
                 else
                 {
                     // 初始化默认数据
                     string today = DateTime.Today.ToString("yyyy-MM-dd");
-                    timeSlots = new()
+                    timeSlots = new ObservableCollection<TimeSlot>
                     {
-                        new() { Name = "上午第一节课", StartDate = today, StartTime = "08:00", EndDate = today, EndTime = "08:45" },
-                        new() { Name = "上午第二节课", StartDate = today, StartTime = "09:00", EndDate = today, EndTime = "09:45" },
-                        new() { Name = "上午第三节课", StartDate = today, StartTime = "10:00", EndDate = today, EndTime = "10:45" },
-                        new() { Name = "下午第一节课", StartDate = today, StartTime = "14:00", EndDate = today, EndTime = "14:45" },
-                        new() { Name = "下午第二节课", StartDate = today, StartTime = "15:00", EndDate = today, EndTime = "15:45" }
+                        new TimeSlot { Name = "新时间段示例", StartDate = today, StartTime = "08:00", EndDate = today, EndTime = "08:45" },
                     };
                     SaveData();
                 }
+
                 UpdateDataGrid();
             }
             catch (Exception ex)
             {
                 ShowStatus($"加载数据失败: {ex.Message}", false);
-                timeSlots = new();
+                timeSlots = new ObservableCollection<TimeSlot>();
             }
         }
 
@@ -78,7 +124,9 @@ namespace ExamSettings.Pages
             {
                 if (timeSlots != null && dataFilePath != null)
                 {
-                    string json = JsonConvert.SerializeObject(timeSlots, Formatting.Indented);
+                    // Convert to List for serialization
+                    var list = new List<TimeSlot>(timeSlots);
+                    string json = JsonConvert.SerializeObject(list, Formatting.Indented);
                     File.WriteAllText(dataFilePath, json);
                     ShowStatus("数据保存成功", true);
                 }
@@ -91,7 +139,11 @@ namespace ExamSettings.Pages
 
         private void UpdateDataGrid()
         {
-            dgTimeSlots.ItemsSource = timeSlots;
+            // Bind the ObservableCollection so UI updates automatically on changes
+            if (dgTimeSlots != null)
+            {
+                dgTimeSlots.ItemsSource = timeSlots;
+            }
         }
 
         private bool CheckTimeOverlap(TimeSlot newSlot, TimeSlot? existingSlot = null)
@@ -122,8 +174,32 @@ namespace ExamSettings.Pages
 
         private void ShowStatus(string message, bool isSuccess)
         {
-            txtStatus.Text = message;
-            txtStatus.Foreground = isSuccess ? System.Windows.Media.Brushes.Green : System.Windows.Media.Brushes.Red;
+            // Prefer InfoBar if available in XAML
+            if (InfoBar1 != null)
+            {
+                // Ensure UI thread
+                Dispatcher.Invoke(() =>
+                {
+                    InfoBar1.Title = isSuccess ? "成功" : "提示";
+                    InfoBar1.Message = message;
+                    InfoBar1.Severity = isSuccess ? InfoBarSeverity.Success : InfoBarSeverity.Warning;
+                    InfoBar1.IsOpen = true;
+                });
+                return;
+            }
+
+            // Fallback to previous TextBlock-based status
+            if (txtStatus == null)
+            {
+                System.Diagnostics.Debug.WriteLine(message);
+                return;
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                txtStatus.Text = message;
+                txtStatus.Foreground = isSuccess ? Brushes.Green : Brushes.Red;
+            });
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
@@ -143,9 +219,10 @@ namespace ExamSettings.Pages
                         return;
                     }
 
-                    timeSlots.Add(dialog.TimeSlot);
+                    // Ensure collection modification is done on UI thread
                     Dispatcher.Invoke(() =>
                     {
+                        timeSlots.Add(dialog.TimeSlot);
                         UpdateDataGrid();
                         SaveData();
                         ShowStatus("添加时间段成功", true);
@@ -179,6 +256,7 @@ namespace ExamSettings.Pages
 
                     Dispatcher.Invoke(() =>
                     {
+                        // Properties on selectedSlot will raise PropertyChanged; just save
                         UpdateDataGrid();
                         SaveData();
                         ShowStatus("编辑时间段成功", true);
@@ -208,9 +286,9 @@ namespace ExamSettings.Pages
             {
                 if (task.Result == ContentDialogResult.Primary && timeSlots != null)
                 {
-                    timeSlots.Remove(selectedSlot);
                     Dispatcher.Invoke(() =>
                     {
+                        timeSlots.Remove(selectedSlot);
                         UpdateDataGrid();
                         SaveData();
                         ShowStatus("删除时间段成功", true);

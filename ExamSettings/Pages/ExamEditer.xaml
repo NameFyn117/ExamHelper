@@ -35,7 +35,10 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- 状态信息 -->
-        <TextBlock Grid.Row="2" x:Name="txtStatus" Margin="0,10,0,0" Foreground="Green"/>
+        <!-- 状态信息: 使用 InfoBar 显示提示 -->
+        <ui:InfoBar x:Name="InfoBar1" Grid.Row="2" Margin="0,10,0,0" Title="提示" IsOpen="False" Severity="Warning" Message="" />
+
+        <!-- 备用的文本状态（保留以防 InfoBar 不可用） -->
+        <TextBlock Grid.Row="2" x:Name="txtStatus" Margin="0,10,0,0" Foreground="Green" Visibility="Collapsed"/>
     </Grid>
 </ui:Page>
