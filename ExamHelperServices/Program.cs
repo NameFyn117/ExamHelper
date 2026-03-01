@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -19,6 +19,11 @@ class Program
     [STAThread]
     static void Main()
     {
+        Console.WriteLine("程序已经启动");
+        
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        Application.ThreadException += Application_ThreadException;
+
         var consoleWindow = GetConsoleWindow();
         if (consoleWindow != IntPtr.Zero)
         {
@@ -44,6 +49,19 @@ class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Application.Run(new TrayApplicationContext(appPath, dataFolderPath));
+    }
+
+    private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+    {
+        Console.WriteLine($"Error: {e.Exception.Message}");
     }
 }
 
